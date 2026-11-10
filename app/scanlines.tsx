@@ -17,26 +17,16 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
 // Draws the line color with varying alpha over the page background.
 const FRAG = `
 precision mediump float;
-uniform vec2 uRes;      // canvas size in device pixels
 uniform float uDpr;
-uniform float uTime;
 uniform float uSpacing;
 uniform float uIntensity;
 uniform vec3 uColor;
 
 void main() {
-  vec2 uv = gl_FragCoord.xy / uRes;
   float y = gl_FragCoord.y / uDpr;
-
   // Smooth sine scanlines.
   float line = 0.5 + 0.5 * cos(y * 6.2831853 / uSpacing);
-  float a = uIntensity * line;
-
-  // Slow band rolling down the screen, like an unsynced CRT.
-  float roll = fract(uv.y + uTime * 0.08);
-  a *= 1.0 - 0.35 * smoothstep(0.0, 0.08, roll) * smoothstep(0.16, 0.08, roll);
-
-  gl_FragColor = vec4(uColor, clamp(a, 0.0, 1.0));
+  gl_FragColor = vec4(uColor, clamp(uIntensity * line, 0.0, 1.0));
 }
 `;
 
@@ -50,10 +40,6 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
 
 export default function Scanlines({ spacing = 3, intensity = 0.35 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const params = useRef({ spacing, intensity });
-  useEffect(() => {
-    params.current = { spacing, intensity };
-  }, [spacing, intensity]);
 
   useEffect(() => {
     const canvas = ref.current!;
@@ -74,42 +60,26 @@ export default function Scanlines({ spacing = 3, intensity = 0.35 }: Props) {
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
     const u = (n: string) => gl.getUniformLocation(prog, n);
-    const uRes = u("uRes"), uDpr = u("uDpr"), uTime = u("uTime");
-    const uSpacing = u("uSpacing"), uIntensity = u("uIntensity"), uColor = u("uColor");
+    gl.uniform1f(u("uSpacing"), spacing);
+    gl.uniform1f(u("uIntensity"), intensity);
+    // Deep navy lines read as part of the sky rather than gray stripes.
+    gl.uniform3f(u("uColor"), 0.04, 0.15, 0.35);
+    const uDpr = u("uDpr");
 
-    const resize = () => {
+    // Static image: draw once, and again whenever the size changes.
+    const draw = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.round(canvas.clientWidth * dpr);
       canvas.height = Math.round(canvas.clientHeight * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    // Dark lines on a light background, light lines on a dark one.
-    const darkMode = window.matchMedia("(prefers-color-scheme: dark)");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = performance.now();
-    let raf = 0;
-    const frame = () => {
-      const p = params.current;
-      const dark = darkMode.matches;
-      gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.uniform1f(uDpr, window.devicePixelRatio || 1);
-      gl.uniform1f(uTime, reduceMotion ? 0 : (performance.now() - start) / 1000);
-      gl.uniform1f(uSpacing, p.spacing);
-      gl.uniform1f(uIntensity, dark ? p.intensity * 0.5 : p.intensity);
-      gl.uniform3f(uColor, dark ? 1 : 0, dark ? 1 : 0, dark ? 1 : 0);
+      gl.uniform1f(uDpr, dpr);
+      gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      raf = requestAnimationFrame(frame);
     };
-    frame();
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
+    draw();
+    window.addEventListener("resize", draw);
+    return () => window.removeEventListener("resize", draw);
+  }, [spacing, intensity]);
 
   // Sits behind all page content; only shows where content is transparent.
   return (
