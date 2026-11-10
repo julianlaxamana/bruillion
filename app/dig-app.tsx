@@ -234,7 +234,7 @@ export default function DigApp({
       </div>
 
       {/* Fixed UI over the world. */}
-      <div className={`flex flex-col items-center px-4 ${inGame ? "pt-6" : "pt-24"}`}>
+      <div className={`flex flex-col items-center px-4 ${inGame ? "pt-16 sm:pt-20" : "pt-24"}`}>
 
         {phase === "landing" && (
           <>
