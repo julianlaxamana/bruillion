@@ -1,7 +1,6 @@
 // Skyline that stands on the grass: a repeating pixel forest, with a campus
 // in front inspired by Royce Hall's twin towers and Powell Library's dome.
 
-import Bear from "./bear";
 import { PX, type Grid, gridToSvg, makeGrid, rng, svgUrl } from "@/lib/pixel";
 
 /* ---------------- Forest (seamless horizontal tile) ---------------- */
@@ -183,8 +182,6 @@ export default function Scenery() {
           backgroundSize: "100% 100%",
         }}
       />
-      {/* The bear stands on the grass, left of campus (in front of it on small screens). */}
-      <Bear className="absolute bottom-0 left-[max(1rem,calc(50%-300px-140px))]" />
     </div>
   );
 }

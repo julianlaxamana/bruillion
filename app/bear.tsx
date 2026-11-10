@@ -90,9 +90,9 @@ export default function Bear({ className = "" }: { className?: string }) {
       role="img"
       aria-label="A brown pixel-art bear"
       className={className}
-      // 3px per art pixel on desktop, smaller on narrow screens.
+      // Fills its wrapper; the parent sets the size.
       style={{
-        width: `min(${W * 3}px, 22vw)`,
+        width: "100%",
         aspectRatio: `${W} / ${H}`,
         backgroundImage: IMAGE,
         backgroundSize: "100% 100%",

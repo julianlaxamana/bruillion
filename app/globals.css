@@ -31,6 +31,12 @@
   to { background-position-x: calc(-1 * var(--drift-w)); }
 }
 
+/* Bear shaking while it burrows. */
+@keyframes dig {
+  0% { translate: -1px 0; }
+  100% { translate: 1px 0; }
+}
+
 body {
   background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom)) fixed;
   color: var(--foreground);

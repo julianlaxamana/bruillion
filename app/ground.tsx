@@ -87,7 +87,7 @@ export default function Ground({ children }: { children?: React.ReactNode }) {
       // Below the scanline canvas (-z-10) so the lines cover the ground too.
       className="relative -z-20 flex-1"
       style={{
-        minHeight: H * PX,
+        minHeight: `calc(${H * PX}px + 100svh)`, // room for the camera to follow a deep dig
         // Tile on top; a solid deep-rock fill continues below it (not behind the grass tufts).
         backgroundImage: `${TILE}, linear-gradient(${DEEP}, ${DEEP})`,
         backgroundRepeat: "repeat-x, no-repeat",
